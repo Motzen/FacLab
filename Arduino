@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <string.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+int JoyStick_X = A0; // x
+int JoyStick_Y = A1; // y
+int JoyStick_Z = 5; // key
+int compteur = 0;
+const byte pinDEL = 3;
+byte luminosite = 0;
+
+LiquidCrystal_I2C lcd(0x27,16,2);
+
+void setup() { 
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Vie du Boss:");
+  
+  pinMode (JoyStick_X, INPUT);
+  pinMode (JoyStick_Y, INPUT);
+  pinMode (JoyStick_Z, INPUT_PULLUP);
+  Serial.begin (9600);
+} 
+
+void loop() { 
+  int x, y, z;
+  int compteur_prec;
+  x = analogRead (JoyStick_X);
+  y = analogRead (JoyStick_Y);
+  z = digitalRead (JoyStick_Z);
+  
+  Serial.print (x, DEC);
+  Serial.print (",");
+  Serial.print (y, DEC);
+  Serial.print (",");
+  Serial.println (z, DEC);
+
+  compteur_prec = compteur;
+  
+  lcd.setCursor(0,1);
+  if (x<470) {
+    if (y<250) {
+      compteur += 100;
+    } else if (y<450) {
+      compteur += 50;
+    } else if (y<600) {
+      compteur += 10;
+    } else if (y<1000){
+      compteur += 1;
+    }
+     
+  } else if (x>550) {
+    if (y<250) {
+      compteur -= 100;
+    } else if (y<450) {
+      compteur -= 50;
+    } else if (y<600) {
+      compteur -= 10;
+    } else if (y<1000){
+      compteur -= 1;
+    }
+  } 
+    
+  if(z==0) {
+    for(int i = 0; i < 16; i++){
+      compteur = 0;
+      lcd.setCursor(i,1);
+      lcd.print(" ");
+  }
+  }
+    
+  if (compteur < 0){
+    compteur = 0;
+  }
+  else if(compteur > 5000){
+    compteur = 5000;
+  }
+ 
+  lcd.print(compteur);
+  luminosite = compteur/20;
+  analogWrite(pinDEL, luminosite);
+  delay(4);
+
+  if(compteur_prec != compteur){
+    lcd.setCursor(0,1);
+    lcd.print(compteur);
+    delay(100);
+    for(int i = 0; i < 16; i++){
+        lcd.setCursor(i,1);
+        lcd.print(" ");
+    }
+  }
+} 
